@@ -1,5 +1,6 @@
 package com.lu4p.fokuslauncher.ui.components
 
+import android.os.Build
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -12,16 +13,20 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
 
 private const val BottomSheetScrimAlpha = 0.56f
 private const val BottomSheetDragHandleAlpha = 0.5f
@@ -45,6 +50,10 @@ fun FokusBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            properties = ModalBottomSheetProperties(
+                    isAppearanceLightStatusBars = false,
+                    isAppearanceLightNavigationBars = false,
+            ),
             scrimColor = Color.Black.copy(alpha = BottomSheetScrimAlpha),
             dragHandle = {
                 BottomSheetDefaults.DragHandle(
@@ -56,6 +65,15 @@ fun FokusBottomSheet(
             },
             modifier = modifier,
     ) {
+        val view = LocalView.current
+        SideEffect {
+            // The sheet owns a separate window; the activity's contrast setting does not apply.
+            (view.parent as? DialogWindowProvider)?.window?.let { window ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
+            }
+        }
         if (contentHeightFraction != null) {
             PeekExpandableSheetContent(
                     peekHeightFraction = contentHeightFraction,
