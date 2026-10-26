@@ -693,11 +693,13 @@ fun AppDrawerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val view = LocalView.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val onCloseUpdated = rememberUpdatedState(onClose)
-    val closeAndReset = remember(viewModel, keyboardController) {
+    val closeAndReset = remember(viewModel, keyboardController, focusManager) {
         {
             // Start IME hide with the drawer exit, not after AnimatedVisibility tears down.
             keyboardController?.hide()
+            focusManager.clearFocus(force = true)
             viewModel.resetSearchState()
             onCloseUpdated.value()
         }
@@ -748,6 +750,7 @@ fun AppDrawerScreen(
             },
             onSettingsClick = {
                 viewModel.dismissMenu()
+                closeAndReset()
                 onSettingsClick()
             },
             modifier = modifier,
@@ -805,6 +808,7 @@ fun AppDrawerScreen(
                     onRename = { newName: String -> viewModel.renameCategory(category, newName) },
                     onEditApps = {
                         viewModel.dismissCategoryActionSheet()
+                        closeAndReset()
                         onEditCategoryApps(category)
                     },
                     onDelete = { viewModel.deleteCategory(category) },
