@@ -1,0 +1,101 @@
+name: Bug report
+description: Report a problem with Fokus Launcher.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues before submitting a new report.
+        Include the exact app version, not just the installation date or "latest".
+        Remove personal information from screenshots and logs.
+  - type: input
+    id: version
+    attributes:
+      label: Fokus Launcher version
+      description: Find the version in Android Settings → Apps → Fokus Launcher → App info.
+      placeholder: "e.g. 1.9.7 (53)"
+    validations:
+      required: true
+  - type: dropdown
+    id: installation_source
+    attributes:
+      label: Installation source
+      options:
+        - Google Play
+        - F-Droid
+        - IzzyOnDroid
+        - GitHub release
+        - Self-built
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device model
+      placeholder: "e.g. Google Pixel 9 Pro"
+    validations:
+      required: true
+  - type: input
+    id: android_version
+    attributes:
+      label: Android version
+      placeholder: "e.g. Android 17"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Android skin or custom ROM
+      description: Include the OS build number if available.
+      placeholder: "e.g. stock Pixel OS, Samsung One UI, GrapheneOS, or LineageOS"
+    validations:
+      required: true
+  - type: dropdown
+    id: default_launcher
+    attributes:
+      label: Is Fokus set as your default home app?
+      description: Check Android Settings → Apps → Default apps → Home app (wording varies by device).
+      options:
+        - "Yes"
+        - "No"
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Describe the steps, relevant settings, and how often the problem occurs. If you cannot reproduce it reliably, say so.
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happens instead? Include any error message.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Screenshots and additional context
+      description: Attach screenshots or a recording if helpful. Mention relevant app language, work/private profiles, permissions, or whether this started after an update. For Other installation sources, name the store or repository here.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs (optional)
+      description: Paste relevant logcat or crash output if available. Logs are not required; remove personal information and secrets before sharing.
+      render: text
