@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an improvement to Fokus Launcher.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues before suggesting a feature.
+        Describe one feature per issue and explain the problem it would solve.
+        If something already supported is not working, use the bug report form instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what is difficult or missing today?
+      placeholder: "When I ..., I have to ..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe how you would like Fokus to behave. Explain the user-facing behavior; implementation details are not required.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Are there existing settings, workarounds, or other approaches? Why do they not meet your needs?
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add sketches, screenshots, or examples if useful. Mention device or Android requirements if the feature depends on them. Remove personal information before sharing.
