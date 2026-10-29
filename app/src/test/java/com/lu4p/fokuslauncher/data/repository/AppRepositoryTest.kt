@@ -1279,6 +1279,25 @@ class AppRepositoryTest {
         }
     }
 
+    @Test
+    fun `unpinLauncherShortcut keeps other pins and does not pin cached shortcuts`() {
+        val pinned = listOf(createMockShortcut("removed", "Removed"), createMockShortcut("kept", "Kept"))
+        val cached = listOf(createMockShortcut("conversation", "Conversation"))
+        val queryFlagsField =
+                LauncherApps.ShortcutQuery::class.java.getDeclaredField("mQueryFlags").apply {
+                    isAccessible = true
+                }
+        every { launcherApps.getShortcuts(any(), myUser) } answers {
+            val flags = queryFlagsField.getInt(firstArg())
+            (if (flags and LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED != 0) pinned else emptyList()) +
+                    (if (flags and LauncherApps.ShortcutQuery.FLAG_MATCH_CACHED != 0) cached else emptyList())
+        }
+
+        assertTrue(repository.unpinLauncherShortcut("com.whatsapp", "removed", myUser))
+
+        verify(exactly = 1) { launcherApps.pinShortcuts("com.whatsapp", listOf("kept"), myUser) }
+    }
+
     // --- Helpers ---
 
     /** Real non-owner [UserHandle]; relaxed mocks match too broadly as MockK argument matchers. */

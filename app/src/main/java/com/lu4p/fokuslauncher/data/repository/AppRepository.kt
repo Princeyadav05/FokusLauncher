@@ -1322,17 +1322,12 @@ internal constructor(
         val launcherApps = launcherAppsOrNull() ?: return false
         val user = userHandle ?: Process.myUserHandle()
         return try {
-            val queryFlags =
-                    LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED or
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                LauncherApps.ShortcutQuery.FLAG_MATCH_CACHED
-                            } else {
-                                0
-                            }
+            // pinShortcuts replaces this launcher's whole pinned set, so only keep shortcuts that
+            // are already pinned. Matching cached (conversation) shortcuts here would pin them.
             val query =
                     LauncherApps.ShortcutQuery()
                             .setPackage(packageName)
-                            .setQueryFlags(queryFlags)
+                            .setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
             val remainingIds =
                     launcherApps.getShortcuts(query, user).orEmpty().map { it.id }.filterNot {
                         it == shortcutId
