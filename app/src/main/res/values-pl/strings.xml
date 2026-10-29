@@ -453,7 +453,7 @@
     </plurals>
     <string name="settings_show_home_air_quality">Pokaż indeks jakości powietrza</string>
     <string name="settings_show_home_air_quality_subtitle">Wyświetlaj AQI obok temperatury pogody</string>
-    <string name="weather_with_aqi_format">%1$s · %2$d</string>
+    <string name="weather_with_aqi_format">%1$s · AQI %2$d</string>
     <string name="settings_show_home_pomodoro">Pokaż timer Pomodoro</string>
     <string name="settings_show_home_pomodoro_subtitle">%1$s timer w miejscu sterowania mediami</string>
     <string name="settings_show_home_pomodoro_subtitle_grant_notifications">Wymaga powiadomień — włącz aby je przyznać, żeby timer mógł powiadomić gdy się skończy</string>

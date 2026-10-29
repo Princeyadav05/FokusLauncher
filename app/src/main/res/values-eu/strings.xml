@@ -373,7 +373,7 @@
     <string name="settings_look_section_colors">Koloreak</string>
     <string name="pomodoro_notification_focus_complete">%1$s saio amaituta</string>
     <string name="settings_look_and_feel_title">Itxura</string>
-    <string name="weather_with_aqi_format">%1$s · %2$d</string>
+    <string name="weather_with_aqi_format">%1$s · AQI %2$d</string>
     <string name="settings_look_section_wallpaper">Atzeko planoa</string>
     <string name="settings_show_world_clock_weather">Erakutsi eguraldia munduko erlojuetan</string>
     <string name="settings_show_home_pomodoro_subtitle_grant_notifications">Jakinarazpenak behar ditu - Aktibatu behar dituzu tenporizadoreak abisatzeko amaitzen denean</string>

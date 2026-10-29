@@ -45,8 +45,7 @@ class WeatherRepository @Inject constructor() {
      * @param lat Latitude
      * @param lon Longitude
      * @param useFahrenheit When true, requests and parses values in Fahrenheit per Open-Meteo.
-     * Also selects US AQI instead of European AQI when [includeAqi] is true.
-     * @param includeAqi When true, also fetches current AQI from the Open-Meteo air-quality API.
+     * @param includeAqi When true, also fetches current US AQI from the Open-Meteo air-quality API.
      * @return WeatherData or null if the forecast fetch fails
      */
     suspend fun getWeather(
@@ -70,7 +69,7 @@ class WeatherRepository @Inject constructor() {
                     val forecastDeferred = async { fetchCurrentForecast(lat, lon, useFahrenheit) }
                     val aqiDeferred =
                             if (includeAqi) {
-                                async { fetchCurrentAqi(lat, lon, useUsAqi = useFahrenheit) }
+                                async { fetchCurrentAqi(lat, lon) }
                             } else {
                                 null
                             }
@@ -177,8 +176,12 @@ class WeatherRepository @Inject constructor() {
         return parseOpenMeteoResponse(response)
     }
 
-    private fun fetchCurrentAqi(lat: Double, lon: Double, useUsAqi: Boolean): Int? {
-        val aqiField = if (useUsAqi) "us_aqi" else "european_aqi"
+    /**
+     * Uses US AQI regardless of temperature unit. It is the scale most weather and air-quality
+     * apps show outside Europe, including in India, where the European index reads far lower.
+     */
+    private fun fetchCurrentAqi(lat: Double, lon: Double): Int? {
+        val aqiField = "us_aqi"
         val url =
                 URL(
                         OPEN_METEO_AIR_QUALITY_URL +
@@ -198,7 +201,7 @@ class WeatherRepository @Inject constructor() {
     private fun parseOpenMeteoResponse(json: String): WeatherData {
         val obj = JSONObject(json)
         val current = obj.getJSONObject("current")
-        val temperature = current.getDouble("temperature_2m").toInt()
+        val temperature = current.getDouble("temperature_2m").roundToInt()
         val weatherCode = current.getInt("weather_code")
         val openMeteo = openMeteoPresentation(weatherCode)
 

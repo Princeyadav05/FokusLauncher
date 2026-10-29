@@ -64,9 +64,29 @@ class WeatherRepositoryTest {
         val weather = repository.getWeather(52.52, 13.41)
 
         assertNotNull(weather)
-        assertEquals(22, weather?.temperature)
+        assertEquals(23, weather?.temperature)
         assertEquals("04d", weather?.iconCode) // 3 maps to 04d (overcast)
         assertEquals("Overcast", weather?.description)
+    }
+
+    @Test
+    fun `getWeather rounds temperature to the nearest degree`() = runTest {
+        mockWebServer.enqueue(
+                MockResponse()
+                        .setResponseCode(200)
+                        .setBody("""{"current":{"temperature_2m":19.9,"weather_code":3}}""")
+        )
+        mockWebServer.enqueue(
+                MockResponse()
+                        .setResponseCode(200)
+                        .setBody("""{"current":{"temperature_2m":-0.6,"weather_code":3}}""")
+        )
+
+        val warm = repository.getWeather(28.62, 77.03)
+        val cold = repository.getWeather(61.22, -149.9)
+
+        assertEquals(20, warm?.temperature)
+        assertEquals(-1, cold?.temperature)
     }
 
     @Test
@@ -241,13 +261,13 @@ class WeatherRepositoryTest {
         val berlinWeather = repository.getWeather(52.52, 13.41)
         val tokyoWeather = repository.getWeather(35.68, 139.69)
 
-        assertEquals(22, berlinWeather?.temperature)
+        assertEquals(23, berlinWeather?.temperature)
         assertEquals(30, tokyoWeather?.temperature)
         assertEquals(2, mockWebServer.requestCount)
     }
 
     @Test
-    fun `getWeather includes european aqi when requested`() = runTest {
+    fun `getWeather requests us aqi when celsius and includeAqi`() = runTest {
         val forecast =
                 """
             {
@@ -262,7 +282,7 @@ class WeatherRepositoryTest {
                 """
             {
               "current": {
-                "european_aqi": 29
+                "us_aqi": 29
               }
             }
         """
@@ -281,13 +301,13 @@ class WeatherRepositoryTest {
         val weather = repository.getWeather(52.52, 13.41, includeAqi = true)
 
         assertNotNull(weather)
-        assertEquals(22, weather?.temperature)
+        assertEquals(23, weather?.temperature)
         assertEquals(29, weather?.aqi)
         val aqiRequest =
                 (0 until mockWebServer.requestCount)
                         .map { mockWebServer.takeRequest() }
                         .first { it.path?.startsWith("/air-quality") == true }
-        assertTrue(aqiRequest.requestUrl!!.queryParameter("current") == "european_aqi")
+        assertTrue(aqiRequest.requestUrl!!.queryParameter("current") == "us_aqi")
     }
 
     @Test
@@ -378,7 +398,7 @@ class WeatherRepositoryTest {
                 """
             {
               "current": {
-                "european_aqi": 55
+                "us_aqi": 55
               }
             }
         """
