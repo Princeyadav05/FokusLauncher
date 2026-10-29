@@ -3,6 +3,7 @@ package com.lu4p.fokuslauncher.data.local
 import android.content.Context
 import android.os.UserHandle
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -523,7 +524,10 @@ private constructor(
     suspend fun setShowHomeMedia(show: Boolean) {
         dataStore.edit { prefs ->
             prefs[SHOW_HOME_MEDIA_KEY] = show
-            if (show) prefs[SHOW_HOME_POMODORO_KEY] = false
+            if (show) {
+                prefs[SHOW_HOME_POMODORO_KEY] = false
+                resetPomodoroRuntime(prefs)
+            }
         }
     }
 
@@ -534,7 +538,14 @@ private constructor(
         dataStore.edit { prefs ->
             prefs[SHOW_HOME_POMODORO_KEY] = show
             if (show) prefs[SHOW_HOME_MEDIA_KEY] = false
+            else resetPomodoroRuntime(prefs)
         }
+    }
+
+    private fun resetPomodoroRuntime(prefs: MutablePreferences) {
+        val config = parsePomodoroConfig(prefs[POMODORO_CONFIG_KEY] ?: "")
+        val runtime = parsePomodoroRuntime(prefs[POMODORO_RUNTIME_KEY] ?: "", config)
+        prefs[POMODORO_RUNTIME_KEY] = serializePomodoroRuntime(idleRuntimeFor(config, runtime.mode))
     }
 
     val pomodoroConfigFlow: Flow<PomodoroConfig> =
@@ -574,7 +585,13 @@ private constructor(
     }
 
     suspend fun setPomodoroRuntime(state: PomodoroRuntimeState) {
-        setPref(POMODORO_RUNTIME_KEY, serializePomodoroRuntime(state))
+        dataStore.edit { prefs ->
+            if (prefs[SHOW_HOME_POMODORO_KEY] == true) {
+                prefs[POMODORO_RUNTIME_KEY] = serializePomodoroRuntime(state)
+            } else {
+                resetPomodoroRuntime(prefs)
+            }
+        }
     }
 
     val showHomeScreenTimeFlow: Flow<Boolean> = prefFlow(SHOW_HOME_SCREEN_TIME_KEY, false)
