@@ -35,6 +35,13 @@ import com.lu4p.fokuslauncher.ui.theme.LocalLauncherIconGlow
 import com.lu4p.fokuslauncher.ui.theme.LocalPhotoWallpaperOutlineWidthDp
 import com.lu4p.fokuslauncher.ui.theme.launcherIconDp
 
+/** How far the photo backdrop circle of an outlined [LauncherIcon] extends past its bounds. */
+internal fun launcherIconBackdropPadding(outlineWidthDp: Float): Dp {
+    if (outlineWidthDp <= 0f) return 0.dp
+    val strength = (outlineWidthDp / PhotoWallpaperOutlineWidthDp.MAX).coerceIn(0f, 1f)
+    return (3f + 10f * strength).dp
+}
+
 /**
  * [Icon] with size in **dp** scaled by [com.lu4p.fokuslauncher.ui.theme.LocalLauncherFontScale] so
  * icons follow the launcher font size setting.
@@ -200,7 +207,7 @@ fun LauncherIcon(
     val photoPillAlpha = 0.14f + 0.68f * photoPillStrength
     val photoPillPaddingPx =
         remember(outlineWidthDpSetting, density) {
-            with(density) { (3f + 10f * photoPillStrength).dp.toPx() }
+            with(density) { launcherIconBackdropPadding(outlineWidthDpSetting).toPx() }
         }
 
     Box(
