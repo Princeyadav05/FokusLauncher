@@ -877,7 +877,7 @@ private fun HomeFavoritesSection(
                         horizontalAlignment = favAlign,
                         onLabelClick = onLabelClick,
                         onLabelLongPress = onLabelLongPress,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).favoriteLabelLines(),
                         outlined = outlined,
                         notificationIndicatorUiState = notificationIndicatorUiState,
                     )
