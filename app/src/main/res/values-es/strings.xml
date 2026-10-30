@@ -282,7 +282,7 @@
     <string name="settings_look_and_feel_title">Apariencia y estilo</string>
     <string name="home_countdown_now">Ahora</string>
     <string name="settings_pomodoro_break_duration">Duración del descanso</string>
-    <string name="weather_with_aqi_format">%1$s · ICA %2$d</string>
+    <string name="weather_with_aqi_format">%1$s · %2$d</string>
     <plurals name="settings_pomodoro_duration_minutes">
         <item quantity="one">%d minuto</item>
         <item quantity="many">%d minutos</item>
