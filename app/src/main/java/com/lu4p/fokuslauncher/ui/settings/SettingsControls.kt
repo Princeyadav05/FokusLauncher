@@ -68,6 +68,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.lu4p.fokuslauncher.R
+import com.lu4p.fokuslauncher.data.model.AirQualityScale
 import com.lu4p.fokuslauncher.data.model.AppInfo
 import com.lu4p.fokuslauncher.data.model.AppShortcutAction
 import com.lu4p.fokuslauncher.data.model.DrawerAppSortMode
@@ -313,6 +314,38 @@ internal fun TemperatureUnitDropdown(
                 )
             },
             onItemSelected = onUnitSelected,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun AirQualityScaleDropdown(
+        currentScale: AirQualityScale,
+        enabled: Boolean,
+        onScaleSelected: (AirQualityScale) -> Unit
+) {
+    val options = remember { AirQualityScale.entries }
+    var expanded by remember { mutableStateOf(false) }
+    val onExpandedChange =
+            rememberBooleanChangeWithSystemSound { newExpanded ->
+                if (enabled) expanded = newExpanded
+            }
+    SettingsDropdown(
+            title = stringResource(R.string.settings_air_quality_scale),
+            options = options,
+            expanded = expanded,
+            onExpandedChange = onExpandedChange,
+            selectedDisplayText = stringResource(currentScale.labelRes),
+            fieldEnabled = enabled,
+            menuExpanded = expanded && enabled,
+            itemContent = { scale ->
+                Text(
+                        text = stringResource(scale.labelRes),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                )
+            },
+            onItemSelected = onScaleSelected,
     )
 }
 

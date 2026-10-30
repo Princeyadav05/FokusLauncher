@@ -33,6 +33,7 @@ class WeatherRepository @Inject constructor() {
             val lonE2: Int,
             val useFahrenheit: Boolean,
             val includeAqi: Boolean,
+            val useUsAqi: Boolean,
     )
 
     private val weatherCache = mutableMapOf<WeatherCacheKey, WeatherData>()
@@ -40,12 +41,14 @@ class WeatherRepository @Inject constructor() {
 
     /**
      * Fetches weather data for the given coordinates. Returns cached data if less than 30 minutes
-     * old and the requested temperature unit / AQI option matches the cache for those coordinates.
+     * old and the requested temperature unit / AQI options match the cache for those coordinates.
      *
      * @param lat Latitude
      * @param lon Longitude
      * @param useFahrenheit When true, requests and parses values in Fahrenheit per Open-Meteo.
-     * @param includeAqi When true, also fetches current US AQI from the Open-Meteo air-quality API.
+     * @param includeAqi When true, also fetches current AQI from the Open-Meteo air-quality API.
+     * @param useUsAqi When true, requests US AQI instead of European AQI. Only used when
+     * [includeAqi] is true.
      * @return WeatherData or null if the forecast fetch fails
      */
     suspend fun getWeather(
@@ -53,8 +56,9 @@ class WeatherRepository @Inject constructor() {
             lon: Double,
             useFahrenheit: Boolean = false,
             includeAqi: Boolean = false,
+            useUsAqi: Boolean = false,
     ): WeatherData? {
-        val key = weatherCacheKey(lat, lon, useFahrenheit, includeAqi)
+        val key = weatherCacheKey(lat, lon, useFahrenheit, includeAqi, useUsAqi)
         synchronized(weatherCache) {
             weatherCache[key]?.let { cached ->
                 if (System.currentTimeMillis() - cached.lastUpdated < CACHE_DURATION_MS) {
@@ -69,7 +73,7 @@ class WeatherRepository @Inject constructor() {
                     val forecastDeferred = async { fetchCurrentForecast(lat, lon, useFahrenheit) }
                     val aqiDeferred =
                             if (includeAqi) {
-                                async { fetchCurrentAqi(lat, lon) }
+                                async { fetchCurrentAqi(lat, lon, useUsAqi) }
                             } else {
                                 null
                             }
@@ -145,12 +149,14 @@ class WeatherRepository @Inject constructor() {
             lon: Double,
             useFahrenheit: Boolean,
             includeAqi: Boolean,
+            useUsAqi: Boolean,
     ): WeatherCacheKey =
             WeatherCacheKey(
                     latE2 = (lat * 100.0).roundToInt(),
                     lonE2 = (lon * 100.0).roundToInt(),
                     useFahrenheit = useFahrenheit,
                     includeAqi = includeAqi,
+                    useUsAqi = includeAqi && useUsAqi,
             )
 
     private fun fetchCurrentForecast(
@@ -176,12 +182,8 @@ class WeatherRepository @Inject constructor() {
         return parseOpenMeteoResponse(response)
     }
 
-    /**
-     * Uses US AQI regardless of temperature unit. It is the scale most weather and air-quality
-     * apps show outside Europe, including in India, where the European index reads far lower.
-     */
-    private fun fetchCurrentAqi(lat: Double, lon: Double): Int? {
-        val aqiField = "us_aqi"
+    private fun fetchCurrentAqi(lat: Double, lon: Double, useUsAqi: Boolean): Int? {
+        val aqiField = if (useUsAqi) "us_aqi" else "european_aqi"
         val url =
                 URL(
                         OPEN_METEO_AIR_QUALITY_URL +

@@ -237,7 +237,7 @@ class ConfigurationBackup @Inject constructor(
                 "favorite_apps", "swipe_left_app", "swipe_right_app", "double_tap_empty_target",
                 "right_side_shortcuts", "world_clock_cities", "countdown_event", "home_extra_widgets",
                 "preferred_weather_app", "preferred_clock_app", "preferred_calendar_app",
-                "home_date_format_style", "temperature_unit", "pomodoro_config", "home_note_text",
+                "home_date_format_style", "temperature_unit", "air_quality_scale", "pomodoro_config", "home_note_text",
                 "notification_indicator_style", "drawer_category_icons", "drawer_app_sort_mode",
                 "drawer_custom_app_order", "drawer_dot_search_default", "drawer_dot_search_aliases",
                 "profile_display_names", "home_alignment", "launcher_visual_style", "home_app_icon_mode",

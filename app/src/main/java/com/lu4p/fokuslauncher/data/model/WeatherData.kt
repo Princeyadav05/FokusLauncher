@@ -9,8 +9,8 @@ data class WeatherData(
     /** Open-Meteo-style icon code (e.g. `01d`, `10n`) for mapping to a themed weather icon. */
     val iconCode: String = "",
     /**
-     * Consolidated US air quality index from Open-Meteo when requested. Null when AQI was not
-     * fetched or the air-quality call failed.
+     * Consolidated air quality index from Open-Meteo when requested (US or European AQI, per the
+     * air quality scale setting). Null when AQI was not fetched or the air-quality call failed.
      */
     val aqi: Int? = null,
     val lastUpdated: Long = 0L
