@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -81,12 +82,14 @@ import com.lu4p.fokuslauncher.ui.util.combinedClickableWithSystemSound
 
 import kotlinx.coroutines.launch
 
-private const val HOME_NOTE_MAX_VISIBLE_LINES = 10
+/** Rounds a one-line note like other pills without turning a tall note into a circle. */
+private val HomeNotePillShape = RoundedCornerShape(20.dp)
 
 /**
  * Read-only home note, rendered with [renderNoteMarkdown]. Tapping a task line calls
  * [onToggleTask] with its source line index; long-pressing anywhere in the row calls
- * [onClick], which opens [HomeNoteEditor]. Shows a muted placeholder when [text] is blank.
+ * [onClick], which opens [HomeNoteEditor]. Shows a muted placeholder when [text] is blank. Long
+ * notes fill the height the parent offers and end in an ellipsis on the last line that fits.
  */
 @Composable
 fun NoteWidget(
@@ -189,10 +192,10 @@ fun NoteWidget(
                     text = displayText,
                     style = style,
                     color = color,
-                    maxLines = HOME_NOTE_MAX_VISIBLE_LINES,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = textAlign,
                     onTextLayout = { textLayout = it },
+                    pillShape = HomeNotePillShape,
                     modifier = textModifier,
             )
         } else {
@@ -200,7 +203,6 @@ fun NoteWidget(
                     text = displayText,
                     style = style,
                     color = color,
-                    maxLines = HOME_NOTE_MAX_VISIBLE_LINES,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = textAlign,
                     onTextLayout = { textLayout = it },

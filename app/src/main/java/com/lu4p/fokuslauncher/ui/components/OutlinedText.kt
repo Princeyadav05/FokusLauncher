@@ -1,6 +1,7 @@
 package com.lu4p.fokuslauncher.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -8,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -63,6 +65,7 @@ fun OutlinedText(
         overflow: TextOverflow = TextOverflow.Clip,
         textAlign: TextAlign = TextAlign.Unspecified,
         onTextLayout: (TextLayoutResult) -> Unit = {},
+        pillShape: Shape = RoundedCornerShape(50),
 ) {
     val outlineWidthDpSetting = LocalPhotoWallpaperOutlineWidthDp.current
     if (outlineWidthDpSetting > 0f) {
@@ -75,7 +78,7 @@ fun OutlinedText(
                     overflow = overflow,
                     textAlign = textAlign,
                     modifier =
-                            Modifier.photoBackdropPill(outlineWidthDpSetting)
+                            Modifier.photoBackdropPill(outlineWidthDpSetting, shape = pillShape)
                                     .clearAndSetSemantics {},
             )
             Text(
@@ -86,6 +89,8 @@ fun OutlinedText(
                     overflow = overflow,
                     textAlign = textAlign,
                     onTextLayout = onTextLayout,
+                    // Same constraints as the pill, so both lay out the same lines in limited space.
+                    modifier = Modifier.photoBackdropPillPadding(outlineWidthDpSetting),
             )
         }
         return
