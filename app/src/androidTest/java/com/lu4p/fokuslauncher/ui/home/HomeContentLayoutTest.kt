@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
@@ -66,6 +67,83 @@ class HomeContentLayoutTest {
         val favorites = composeTestRule.onNodeWithTag("favorites").fetchSemanticsNode().boundsInRoot
         val unusedSpace = with(composeTestRule.density) { (favorites.top - controls.bottom).toDp() }
         assertTrue("The note left $unusedSpace unused", unusedSpace < 64.dp)
+    }
+
+    private fun showHomeWithShortcutRail(
+            noteText: String,
+            height: Dp = 800.dp,
+            railHeight: Dp = 280.dp,
+    ) {
+        composeTestRule.setContent {
+            FokusLauncherTheme(fontScale = 1f) {
+                HomeContentLayout(modifier = Modifier.requiredSize(width = 320.dp, height = height)) {
+                    Box(Modifier.fillMaxWidth().height(80.dp).testTag("header"))
+                    NoteWidget(
+                            text = noteText,
+                            modifier = Modifier.layoutId(HomeContentSlot.Note).testTag("preview"),
+                    )
+                    Box(Modifier.fillMaxWidth().height(80.dp).testTag("controls"))
+                    Spacer(Modifier.layoutId(HomeContentSlot.Gap))
+                    Box(Modifier.fillMaxWidth().height(railHeight).layoutId(HomeContentSlot.Favorites)) {
+                        Box(Modifier.align(Alignment.BottomStart).width(240.dp).height(80.dp)
+                                .favoriteLabelLines().testTag("labels"))
+                        Box(Modifier.align(Alignment.BottomEnd).width(48.dp).height(railHeight).testTag("rail"))
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun longNoteContinuesBesideTheShortcutRail() {
+        showHomeWithShortcutRail((1..1000).joinToString("\n") { "A long note, line $it" })
+        val note = composeTestRule.onNodeWithTag("preview").fetchSemanticsNode().boundsInRoot
+        val controls = composeTestRule.onNodeWithTag("controls").fetchSemanticsNode().boundsInRoot
+        val labels = composeTestRule.onNodeWithTag("labels").fetchSemanticsNode().boundsInRoot
+        val rail = composeTestRule.onNodeWithTag("rail").fetchSemanticsNode().boundsInRoot
+        assertTrue(controls.bottom > rail.top)
+        assertTrue(controls.bottom < labels.top)
+        assertTrue(note.right <= labels.right + 1f)
+        assertTrue(controls.right <= labels.right + 1f)
+        val unusedSpace = with(composeTestRule.density) { (labels.top - controls.bottom).toDp() }
+        assertTrue("The note left $unusedSpace unused", unusedSpace < 64.dp)
+    }
+
+    @Test
+    fun shortNoteKeepsItsWidthAboveTheShortcutRail() {
+        showHomeWithShortcutRail("milk")
+        val note = composeTestRule.onNodeWithTag("preview").fetchSemanticsNode().boundsInRoot
+        val controls = composeTestRule.onNodeWithTag("controls").fetchSemanticsNode().boundsInRoot
+        val rail = composeTestRule.onNodeWithTag("rail").fetchSemanticsNode().boundsInRoot
+        assertTrue(note.right >= rail.right - 1f)
+        assertTrue(controls.bottom < rail.top)
+    }
+
+    @Test
+    fun longNoteKeepsItsWidthWhenTheRailLeavesTooLittleSpace() {
+        showHomeWithShortcutRail(
+                (1..1000).joinToString("\n") { "A long note, line $it" },
+                railHeight = 100.dp,
+        )
+        val note = composeTestRule.onNodeWithTag("preview").fetchSemanticsNode().boundsInRoot
+        val controls = composeTestRule.onNodeWithTag("controls").fetchSemanticsNode().boundsInRoot
+        val rail = composeTestRule.onNodeWithTag("rail").fetchSemanticsNode().boundsInRoot
+        assertTrue(note.right >= rail.right - 1f)
+        assertTrue(controls.bottom <= rail.top + 1f)
+    }
+
+    @Test
+    fun shortcutRailStaysBelowTheHeaderWhenContentOverflows() {
+        showHomeWithShortcutRail(
+                (1..1000).joinToString("\n") { "A long note, line $it" },
+                height = 340.dp,
+        )
+        val header = composeTestRule.onNodeWithTag("header").fetchSemanticsNode().boundsInRoot
+        val controls = composeTestRule.onNodeWithTag("controls").fetchSemanticsNode().boundsInRoot
+        val labels = composeTestRule.onNodeWithTag("labels").fetchSemanticsNode().boundsInRoot
+        val rail = composeTestRule.onNodeWithTag("rail").fetchSemanticsNode().boundsInRoot
+        assertTrue(rail.top >= header.bottom)
+        assertTrue(controls.bottom <= labels.top)
     }
 
     @Test
