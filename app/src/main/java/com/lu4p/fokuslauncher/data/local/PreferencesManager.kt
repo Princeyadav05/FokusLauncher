@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.lu4p.fokuslauncher.data.model.AirQualityScale
 import com.lu4p.fokuslauncher.data.model.DrawerAppSortMode
 import com.lu4p.fokuslauncher.data.model.FavoriteApp
 import com.lu4p.fokuslauncher.data.model.drawerOpenCountKey
@@ -147,6 +148,7 @@ private constructor(
         private val SHOW_HOME_WEATHER_KEY = booleanPreferencesKey("show_home_weather")
         /** Opt-in AQI next to the home weather temperature; off by default. */
         private val SHOW_HOME_AIR_QUALITY_KEY = booleanPreferencesKey("show_home_air_quality")
+        private val AIR_QUALITY_SCALE_KEY = stringPreferencesKey("air_quality_scale")
         /** Show current weather next to each world-clock city on home. */
         private val SHOW_WORLD_CLOCK_WEATHER_KEY =
                 booleanPreferencesKey("show_world_clock_weather")
@@ -495,6 +497,18 @@ private constructor(
 
     val showHomeAirQualityFlow: Flow<Boolean> = prefFlow(SHOW_HOME_AIR_QUALITY_KEY, false)
     suspend fun setShowHomeAirQuality(show: Boolean) = setPref(SHOW_HOME_AIR_QUALITY_KEY, show)
+
+    val airQualityScaleFlow: Flow<AirQualityScale> =
+            dataStore.data.map { prefs ->
+                AirQualityScale.fromString(prefs[AIR_QUALITY_SCALE_KEY])
+            }
+
+    suspend fun setAirQualityScale(scale: AirQualityScale) {
+        dataStore.edit { prefs ->
+            if (scale == AirQualityScale.SYSTEM_DEFAULT) prefs.remove(AIR_QUALITY_SCALE_KEY)
+            else prefs[AIR_QUALITY_SCALE_KEY] = scale.name
+        }
+    }
 
     val showWorldClockWeatherFlow: Flow<Boolean> = prefFlow(SHOW_WORLD_CLOCK_WEATHER_KEY, false)
     suspend fun setShowWorldClockWeather(show: Boolean) =

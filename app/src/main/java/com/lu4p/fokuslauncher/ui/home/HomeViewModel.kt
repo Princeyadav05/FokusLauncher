@@ -76,6 +76,8 @@ import com.lu4p.fokuslauncher.ui.util.stateEagerlyIn
 import com.lu4p.fokuslauncher.ui.util.stateWhileSubscribedIn
 import com.lu4p.fokuslauncher.data.util.TemperatureUnitHelper
 import com.lu4p.fokuslauncher.data.model.TemperatureUnit
+import com.lu4p.fokuslauncher.data.util.AirQualityScaleHelper
+import com.lu4p.fokuslauncher.data.model.AirQualityScale
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -214,6 +216,8 @@ class HomeViewModel @Inject constructor(
     private val _homeDateFormatStyle = MutableStateFlow(HomeDateFormatStyle.SYSTEM_DEFAULT)
 
     private val _temperatureUnit = MutableStateFlow(TemperatureUnit.SYSTEM_DEFAULT)
+
+    private val _airQualityScale = MutableStateFlow(AirQualityScale.SYSTEM_DEFAULT)
 
     private val _weatherUiState = MutableStateFlow(HomeWeatherUiState())
     val weatherUiState: StateFlow<HomeWeatherUiState> = _weatherUiState.asStateFlow()
@@ -423,6 +427,7 @@ class HomeViewModel @Inject constructor(
         observePhotoWallpaperAppearance()
         observeHomeDateFormatStyle()
         observeTemperatureUnit()
+        observeAirQualityScale()
         observeHomeWidgetItemPreferences()
         observeWeatherRefreshTriggers()
         observeWorldClockWeatherPreference()
@@ -1158,6 +1163,17 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun observeAirQualityScale() {
+        observeFlow(preferencesManager.airQualityScaleFlow.distinctUntilChanged()) { scale ->
+            if (_airQualityScale.value != scale) {
+                _airQualityScale.value = scale
+                if (showHomeAirQuality && _uiState.value.showHomeWeather) {
+                    refreshWeather()
+                }
+            }
+        }
+    }
+
     private fun observeHomeWidgetItemPreferences() {
         observeFlow(preferencesManager.homeWidgetVisibilityFlow) { v ->
             _uiState.value =
@@ -1809,6 +1825,10 @@ class HomeViewModel @Inject constructor(
                                                 lon,
                                                 useFahrenheit = useFahrenheit,
                                                 includeAqi = showHomeAirQuality,
+                                                useUsAqi =
+                                                        AirQualityScaleHelper.useUsAqi(
+                                                                _airQualityScale.value
+                                                        ),
                                         )
                                     },
                             weatherUseFahrenheit = useFahrenheit,

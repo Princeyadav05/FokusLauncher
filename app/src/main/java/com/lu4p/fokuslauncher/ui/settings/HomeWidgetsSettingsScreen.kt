@@ -211,6 +211,13 @@ fun HomeWidgetsSettingsScreen(
                 )
             }
             item {
+                AirQualityScaleDropdown(
+                        currentScale = uiState.airQualityScale,
+                        enabled = uiState.showHomeWeather && uiState.showHomeAirQuality,
+                        onScaleSelected = viewModel::setAirQualityScale,
+                )
+            }
+            item {
                 SettingsToggleRow(
                         label = stringResource(R.string.settings_show_world_clock_weather),
                         subtitle =

@@ -24,6 +24,7 @@ import com.lu4p.fokuslauncher.data.model.HomeAlignment
 import com.lu4p.fokuslauncher.data.model.NotificationIndicatorColorPreset
 import com.lu4p.fokuslauncher.data.model.NotificationIndicatorStyle
 import com.lu4p.fokuslauncher.data.model.TemperatureUnit
+import com.lu4p.fokuslauncher.data.model.AirQualityScale
 import com.lu4p.fokuslauncher.data.model.ReservedCategoryNames
 import com.lu4p.fokuslauncher.data.model.WORLD_CLOCK_LABEL_MAX_LENGTH
 import com.lu4p.fokuslauncher.data.model.WorldClockCity
@@ -111,6 +112,7 @@ data class SettingsUiState(
         val showHomeDate: Boolean = true,
         val showHomeWeather: Boolean = true,
         val showHomeAirQuality: Boolean = false,
+        val airQualityScale: AirQualityScale = AirQualityScale.SYSTEM_DEFAULT,
         val showWorldClockWeather: Boolean = false,
         val showHomeBattery: Boolean = true,
         val showHomeMedia: Boolean = false,
@@ -361,8 +363,9 @@ constructor(
                             combine(
                                     preferencesManager.showWorldClockWeatherFlow,
                                     preferencesManager.showHomeAirQualityFlow,
-                            ) { showWorldClockWeather, showHomeAirQuality ->
-                                showWorldClockWeather to showHomeAirQuality
+                                    preferencesManager.airQualityScaleFlow,
+                            ) { showWorldClockWeather, showHomeAirQuality, airQualityScale ->
+                                Triple(showWorldClockWeather, showHomeAirQuality, airQualityScale)
                             },
                     ) { clk, cal, fmt, tempUnit, weatherExtras ->
                         HomeWidgetTapsAndFormat(
@@ -372,6 +375,7 @@ constructor(
                                 tempUnit,
                                 weatherExtras.first,
                                 weatherExtras.second,
+                                weatherExtras.third,
                         )
                     }
             val homeWidgetItemsFlow =
@@ -408,6 +412,7 @@ constructor(
                                 temperatureUnit = taps.temperatureUnit,
                                 showWorldClockWeather = taps.showWorldClockWeather,
                                 showHomeAirQuality = taps.showHomeAirQuality,
+                                airQualityScale = taps.airQualityScale,
                         )
                     }
             val drawerPrefsFlow =
@@ -620,6 +625,7 @@ constructor(
                         showHomeDate = homeWidgetItems.showDate,
                         showHomeWeather = homeWidgetItems.showWeather,
                         showHomeAirQuality = homeWidgetItems.showHomeAirQuality,
+                        airQualityScale = homeWidgetItems.airQualityScale,
                         showWorldClockWeather = homeWidgetItems.showWorldClockWeather,
                         showHomeBattery = homeWidgetItems.showBattery,
                         showHomeMedia = homeWidgetItems.showMedia,
@@ -693,6 +699,7 @@ constructor(
             val temperatureUnit: TemperatureUnit,
             val showWorldClockWeather: Boolean,
             val showHomeAirQuality: Boolean,
+            val airQualityScale: AirQualityScale,
     )
 
     private data class HomeWidgetItemSettings(
@@ -719,6 +726,7 @@ constructor(
             val temperatureUnit: TemperatureUnit,
             val showWorldClockWeather: Boolean,
             val showHomeAirQuality: Boolean,
+            val airQualityScale: AirQualityScale,
     )
 
     private data class FavoritesBase(
@@ -1272,6 +1280,9 @@ constructor(
 
     fun setTemperatureUnit(unit: TemperatureUnit) =
             launchPreferences { setTemperatureUnit(unit) }
+
+    fun setAirQualityScale(scale: AirQualityScale) =
+            launchPreferences { setAirQualityScale(scale) }
 
     fun setDrawerSidebarCategories(enabled: Boolean) {
         viewModelScope.launch {
