@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.lu4p.fokuslauncher.R
 import com.lu4p.fokuslauncher.media.MediaCustomActionButton
 import com.lu4p.fokuslauncher.ui.home.WidgetControlIconBaseSizeDp
+import com.lu4p.fokuslauncher.ui.theme.LocalPhotoWallpaperOutlineWidthDp
 import com.lu4p.fokuslauncher.ui.util.clickableNoRippleWithSystemSound
 
 /**
@@ -64,6 +65,10 @@ fun MediaWidget(
     val artistStyle = MaterialTheme.typography.bodyMedium
     val showArtist = !artist.isNullOrBlank() && !artist.equals(title, ignoreCase = true)
     val iconSize = WidgetControlIconBaseSizeDp.dp
+    // Icon backdrops draw outside the icon bounds, so make room for them in the layout.
+    val iconBackdropPadding =
+            if (outlined) launcherIconBackdropPadding(LocalPhotoWallpaperOutlineWidthDp.current)
+            else 0.dp
     Column(
             horizontalAlignment = Alignment.Start,
             modifier = modifier.testTag("media_widget"),
@@ -95,8 +100,23 @@ fun MediaWidget(
         }
         Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement =
+                        Arrangement.spacedBy(
+                                // Extra buttons need the room on narrow screens, so their circles touch.
+                                maxOf(
+                                        16.dp,
+                                        iconBackdropPadding * 2 +
+                                                if (like == null && save == null) 4.dp else 0.dp,
+                                ),
+                                Alignment.Start,
+                        ),
+                modifier =
+                        Modifier.fillMaxWidth()
+                                .padding(
+                                        start = iconBackdropPadding,
+                                        top = 4.dp + iconBackdropPadding,
+                                        bottom = iconBackdropPadding,
+                                ),
         ) {
                 val previousColor = if (canSkipToPrevious) color else color.copy(alpha = 0.38f)
                 LauncherIcon(
@@ -223,7 +243,8 @@ private fun MediaWidgetMarqueeText(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = textAlign,
-                modifier = marqueeModifier,
+                // A photo backdrop pill wraps the text, so it must not fill the line.
+                modifier = modifier.basicMarquee(),
         )
     } else {
         Text(
