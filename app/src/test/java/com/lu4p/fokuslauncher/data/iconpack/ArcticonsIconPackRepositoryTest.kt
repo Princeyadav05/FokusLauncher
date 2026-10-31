@@ -87,6 +87,48 @@ class ArcticonsIconPackRepositoryTest {
     }
 
     @Test
+    fun getIcon_withoutPlaceholder_returnsOnlyMappedIcons() = runBlocking {
+        repository.seedLoadedPackForTest(
+                packageName = "com.donnnno.arcticons",
+                componentToDrawable =
+                        mapOf(
+                                "ComponentInfo{com.example.app/com.example.app.Main}" to "example",
+                        ),
+                drawableByName =
+                        mapOf(
+                                "example" to ColorDrawable(Color.WHITE),
+                                ArcticonsIconPackRepository.PLACEHOLDER_DRAWABLE_NAME to
+                                        ColorDrawable(Color.WHITE),
+                        ),
+        )
+        val mapped =
+                AppInfo(
+                        packageName = "com.example.app",
+                        label = "Example",
+                        icon = null,
+                        componentName = ComponentName("com.example.app", "com.example.app.Main"),
+                )
+        val unmapped =
+                AppInfo(
+                        packageName = "com.missing.app",
+                        label = "Missing",
+                        icon = null,
+                        componentName = ComponentName("com.missing.app", "com.missing.app.Main"),
+                )
+
+        val drawerFirst = unmapped.copy(packageName = "com.other.app", componentName = null)
+
+        assertNotNull(repository.getIcon(mapped, allowPlaceholder = false))
+        // Rail first, then drawer: the drawer still gets the placeholder.
+        assertNull(repository.getIcon(unmapped, allowPlaceholder = false))
+        assertNotNull(repository.getIcon(unmapped))
+        assertNull(repository.getIcon(unmapped, allowPlaceholder = false))
+        // Drawer first: its cached placeholder must not leak into the rail.
+        assertNotNull(repository.getIcon(drawerFirst))
+        assertNull(repository.getIcon(drawerFirst, allowPlaceholder = false))
+    }
+
+    @Test
     fun getIcon_returnsNullWhenPlaceholderAlsoMissing() = runBlocking {
         repository.seedLoadedPackForTest(
                 packageName = "com.donnnno.arcticons",

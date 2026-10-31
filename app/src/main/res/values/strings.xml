@@ -462,7 +462,7 @@
     <string name="settings_home_app_icons_text">Text only</string>
     <string name="settings_home_app_icons_with_label">Arcticons and labels</string>
     <string name="settings_home_app_icons_only">Arcticons only</string>
-    <string name="settings_arcticons_drawer_icons_subtitle">Show Arcticons in the drawer and choose a home app icon style below</string>
+    <string name="settings_arcticons_drawer_icons_subtitle">Show Arcticons in the drawer and home shortcuts, and choose a home app icon style below</string>
     <string name="settings_arcticons_drawer_icons_subtitle_missing">Requires Arcticons — turn on to install</string>
     <string name="settings_arcticons_install_title">Install Arcticons?</string>
     <string name="settings_arcticons_install_message">Fokus Launcher uses the Arcticons icon pack for drawer and home app icons. Install Arcticons from F-Droid or the Play Store, then enable this option again.</string>

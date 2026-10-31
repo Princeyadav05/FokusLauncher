@@ -1,8 +1,12 @@
 package com.lu4p.fokuslauncher.ui.home
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
@@ -13,10 +17,12 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import com.lu4p.fokuslauncher.data.model.FavoriteApp
 import com.lu4p.fokuslauncher.data.model.AppInfo
 import com.lu4p.fokuslauncher.data.model.HomeAlignment
 import com.lu4p.fokuslauncher.data.model.HomeShortcut
+import com.lu4p.fokuslauncher.data.model.ShortcutTarget
 import com.lu4p.fokuslauncher.data.model.WeatherData
 import com.lu4p.fokuslauncher.ui.theme.FokusLauncherTheme
 import org.junit.Assert.assertEquals
@@ -113,6 +119,63 @@ class HomeScreenTest {
             }
         }
         composeTestRule.onNodeWithText("Music").assertIsDisplayed()
+    }
+
+    private val musicShortcuts =
+            listOf(
+                    HomeShortcut(iconName = "music", target = ShortcutTarget.App("com.lu4p.music")),
+                    HomeShortcut(iconName = "call", target = ShortcutTarget.PhoneDial),
+            )
+
+    private fun setShortcutRail(
+            useArcticons: Boolean,
+            arcticon: android.graphics.drawable.Drawable?,
+            onIconClick: (HomeShortcut) -> Unit = {},
+    ) {
+        composeTestRule.setContent {
+            FokusLauncherTheme {
+                CompositionLocalProvider(LocalHomeShortcutIconLoader provides { arcticon }) {
+                    HomeScreenContent(
+                        uiState = HomeUiState(useArcticonsShortcutIcons = useArcticons),
+                        clockUiState = clock(), weatherUiState = weatherOff,
+                        favorites = emptyList(), installedApps = listOf(AppInfo("com.lu4p.music", "Music", null)),
+                        rightSideShortcuts = musicShortcuts, onLabelClick = {}, onIconClick = onIconClick,
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun shortcutRailShowsLargerArcticonsForAppsOnly() {
+        var clicked: HomeShortcut? = null
+        setShortcutRail(useArcticons = true, arcticon = ColorDrawable(Color.WHITE)) { clicked = it }
+
+        composeTestRule.onNodeWithTag("right_shortcut_arcticon_0", useUnmergedTree = true)
+            .assertIsDisplayed()
+            .assertWidthIsAtLeast(32.dp)
+        composeTestRule.onAllNodesWithTag("right_shortcut_arcticon_1", useUnmergedTree = true)
+            .assertCountEquals(0)
+        composeTestRule.onNodeWithTag("right_shortcut_icon_0").performClick()
+        assertEquals(musicShortcuts[0], clicked)
+    }
+
+    @Test
+    fun shortcutRailKeepsMaterialIconsWhenArcticonsAreOff() {
+        setShortcutRail(useArcticons = false, arcticon = ColorDrawable(Color.WHITE))
+
+        composeTestRule.onNodeWithTag("right_shortcut_icon_0").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("right_shortcut_arcticon_0", useUnmergedTree = true)
+            .assertCountEquals(0)
+    }
+
+    @Test
+    fun shortcutRailKeepsMaterialIconWhenPackHasNoIcon() {
+        setShortcutRail(useArcticons = true, arcticon = null)
+
+        composeTestRule.onNodeWithTag("right_shortcut_icon_0").assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("right_shortcut_arcticon_0", useUnmergedTree = true)
+            .assertCountEquals(0)
     }
 
     @Test

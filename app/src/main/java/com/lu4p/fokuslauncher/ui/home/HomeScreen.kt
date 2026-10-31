@@ -102,6 +102,10 @@ import com.lu4p.fokuslauncher.utils.LockScreenHelper
 
 private val LocalHomeIconLoader = compositionLocalOf<suspend (AppInfo) -> android.graphics.drawable.Drawable?> { { null } }
 
+/** Loads mapped Arcticons only (no pack placeholder), so unmapped shortcuts keep their icon. */
+internal val LocalHomeShortcutIconLoader =
+    compositionLocalOf<suspend (AppInfo) -> android.graphics.drawable.Drawable?> { { null } }
+
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -178,7 +182,9 @@ fun HomeScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         CompositionLocalProvider(
-            LocalHomeIconLoader provides remember(viewModel) { { app -> viewModel.loadArcticonsIcon(app) } }
+            LocalHomeIconLoader provides remember(viewModel) { { app -> viewModel.loadArcticonsIcon(app) } },
+            LocalHomeShortcutIconLoader provides
+                remember(viewModel) { { app -> viewModel.loadArcticonsShortcutIcon(app) } },
         ) {
             HomeScreenContent(
             uiState = uiState,
@@ -403,6 +409,7 @@ fun HomeScreenContent(
                         favorites = favorites,
                         installedApps = installedApps,
                         rightSideShortcuts = rightSideShortcuts,
+                        useArcticonsShortcutIcons = uiState.useArcticonsShortcutIcons,
                         profileDisplayNameOverrides = profileDisplayNameOverrides,
                         launcherFontScale = uiState.launcherFontScale,
                         outlined = uiState.usesPhotoWallpaper,
@@ -767,6 +774,8 @@ private fun FavoritesList(
 @Composable
 private fun ShortcutIconsColumn(
     shortcuts: List<HomeShortcut>,
+    useArcticons: Boolean,
+    installedApps: List<AppInfo>,
     onIconClick: (HomeShortcut) -> Unit,
     iconSize: Dp,
     touchTargetSize: Dp,
@@ -782,6 +791,8 @@ private fun ShortcutIconsColumn(
     ) {
         RightShortcutIcons(
             shortcuts = shortcuts,
+            useArcticons = useArcticons,
+            installedApps = installedApps,
             onIconClick = onIconClick,
             iconSize = iconSize,
             touchTargetSize = touchTargetSize,
@@ -798,6 +809,7 @@ private fun HomeFavoritesSection(
     favorites: List<FavoriteApp>,
     installedApps: List<AppInfo>,
     rightSideShortcuts: List<HomeShortcut>,
+    useArcticonsShortcutIcons: Boolean,
     profileDisplayNameOverrides: Map<String, String>,
     launcherFontScale: Float,
     outlined: Boolean,
@@ -850,6 +862,8 @@ private fun HomeFavoritesSection(
                     ) {
                         RightShortcutIcons(
                             shortcuts = rightSideShortcuts,
+                            useArcticons = useArcticonsShortcutIcons,
+                            installedApps = installedApps,
                             onIconClick = onIconClick,
                             iconSize = shortcutIconSize,
                             touchTargetSize = shortcutTouchTargetSize,
@@ -891,6 +905,8 @@ private fun HomeFavoritesSection(
                         }
                     ShortcutIconsColumn(
                         shortcuts = rightSideShortcuts,
+                        useArcticons = useArcticonsShortcutIcons,
+                        installedApps = installedApps,
                         onIconClick = onIconClick,
                         iconSize = shortcutIconSize,
                         touchTargetSize = shortcutTouchTargetSize,
@@ -917,13 +933,24 @@ private fun HomeFavoritesSection(
 @Composable
 private fun RightShortcutIcons(
     shortcuts: List<HomeShortcut>,
+    useArcticons: Boolean,
+    installedApps: List<AppInfo>,
     onIconClick: (HomeShortcut) -> Unit,
     iconSize: Dp,
     touchTargetSize: Dp,
     iconAlignment: Alignment,
     outlined: Boolean = false,
 ) {
+    val loadIcon = LocalHomeShortcutIconLoader.current
     shortcuts.forEachIndexed { index, shortcut ->
+        val iconApp = remember(shortcut, installedApps, useArcticons) {
+            if (useArcticons) findHomeShortcutIconApp(shortcut, installedApps) else null
+        }
+        val arcticon by produceState<android.graphics.drawable.Drawable?>(
+            null, iconApp?.let(::appListStableKey), loadIcon
+        ) {
+            value = iconApp?.let { loadIcon(it) }
+        }
         Box(
             modifier =
                 Modifier.size(touchTargetSize)
@@ -931,16 +958,32 @@ private fun RightShortcutIcons(
                     .testTag("right_shortcut_icon_$index"),
             contentAlignment = iconAlignment,
         ) {
-            LauncherIcon(
-                imageVector = MinimalIcons.iconFor(shortcut.iconName),
-                contentDescription = stringResource(R.string.cd_shortcut_icon),
-                tint = MaterialTheme.colorScheme.onBackground,
-                iconSize = iconSize,
-                outlined = outlined,
-            )
+            val drawable = arcticon
+            if (drawable != null) {
+                // Arcticons are thin line glyphs, so they need more room than Material icons.
+                LauncherIcon(
+                    drawable = drawable,
+                    contentDescription = stringResource(R.string.cd_shortcut_icon),
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    iconSize = ArcticonsShortcutIconSize,
+                    outlined = outlined,
+                    forceTint = true,
+                    modifier = Modifier.testTag("right_shortcut_arcticon_$index"),
+                )
+            } else {
+                LauncherIcon(
+                    imageVector = MinimalIcons.iconFor(shortcut.iconName),
+                    contentDescription = stringResource(R.string.cd_shortcut_icon),
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    iconSize = iconSize,
+                    outlined = outlined,
+                )
+            }
         }
     }
 }
+
+private val ArcticonsShortcutIconSize = 32.dp
 
 @Composable
 private fun BoxScope.HomeDefaultLauncherBanner(

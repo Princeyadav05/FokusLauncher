@@ -231,6 +231,29 @@ class HomeViewModelTest {
         assertEquals(HomeAppIconMode.ICON_ONLY, viewModel.uiState.value.homeAppIconMode)
     }
 
+    @Test
+    fun shortcutArcticonsFollowGlobalToggleEvenWhenFavoritesAreText() {
+        val enabled = MutableStateFlow(false)
+        val installed = MutableStateFlow<String?>("com.donnnno.arcticons")
+        every { preferencesManager.useArcticonsDrawerIconsFlow } returns enabled
+        every { preferencesManager.homeAppIconModeFlow } returns flowOf("TEXT")
+        every { arcticonsIconPackRepository.installedPackage } returns installed
+
+        val viewModel = createViewModel()
+        testDispatcher.scheduler.runCurrent()
+        assertFalse(viewModel.uiState.value.useArcticonsShortcutIcons)
+
+        enabled.value = true
+        testDispatcher.scheduler.runCurrent()
+        assertTrue(viewModel.uiState.value.useArcticonsShortcutIcons)
+        assertEquals(HomeAppIconMode.TEXT, viewModel.uiState.value.homeAppIconMode)
+        coVerify { arcticonsIconPackRepository.warmUp() }
+
+        installed.value = null
+        testDispatcher.scheduler.runCurrent()
+        assertFalse(viewModel.uiState.value.useArcticonsShortcutIcons)
+    }
+
     private fun createViewModel() = HomeViewModel(
         context,
         appRepository,

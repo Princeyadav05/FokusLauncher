@@ -45,7 +45,7 @@ constructor(@param:ApplicationContext private val context: Context) {
     private val componentCache = ConcurrentHashMap<String, ComponentName>()
 
     /** appListStableKey → drawable ConstantState (mapped icon or pack placeholder). */
-    private val iconConstantStateCache = ConcurrentHashMap<String, Drawable.ConstantState>()
+    private val iconConstantStateCache = ConcurrentHashMap<String, CachedIcon>()
     /** Apps that cannot resolve even the pack placeholder (pack missing / placeholder missing). */
     private val iconMissCache = ConcurrentHashMap.newKeySet<String>()
 
@@ -91,11 +91,21 @@ constructor(@param:ApplicationContext private val context: Context) {
         withContext(Dispatchers.IO) { ensureLoaded() }
     }
 
-    suspend fun getIcon(app: AppInfo): Drawable? =
+    /**
+     * Returns the pack icon for [app]. Unmapped apps get the pack placeholder, or null when
+     * [allowPlaceholder] is false so callers can keep their own icon.
+     */
+    suspend fun getIcon(app: AppInfo, allowPlaceholder: Boolean = true): Drawable? =
             withContext(Dispatchers.IO) {
                 val appKey = appListStableKey(app)
                 if (appKey in iconMissCache) return@withContext null
-                iconConstantStateCache[appKey]?.let { return@withContext it.newDrawable().mutate() }
+                iconConstantStateCache[appKey]?.let { cached ->
+                    return@withContext if (cached.isPlaceholder && !allowPlaceholder) {
+                        null
+                    } else {
+                        cached.state.newDrawable().mutate()
+                    }
+                }
 
                 val pack = ensureLoaded()
                 if (pack == null) {
@@ -125,7 +135,9 @@ constructor(@param:ApplicationContext private val context: Context) {
                     iconMissCache.add(appKey)
                     return@withContext null
                 }
-                iconConstantStateCache[appKey] = constantState
+                val isPlaceholder = mappedState == null
+                iconConstantStateCache[appKey] = CachedIcon(constantState, isPlaceholder)
+                if (isPlaceholder && !allowPlaceholder) return@withContext null
                 constantState.newDrawable().mutate()
             }
 
@@ -261,6 +273,8 @@ constructor(@param:ApplicationContext private val context: Context) {
     private fun clearCachesLocked() {
         clearCaches()
     }
+
+    private class CachedIcon(val state: Drawable.ConstantState, val isPlaceholder: Boolean)
 
     private data class LoadedPack(
             val packageName: String,

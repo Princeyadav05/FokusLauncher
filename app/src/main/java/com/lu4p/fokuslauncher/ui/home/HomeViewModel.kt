@@ -120,6 +120,8 @@ data class HomeUiState(
     /** Uniform outline stroke in dp when [usesPhotoWallpaper]; 0 = per-widget defaults. */
     val photoWallpaperOutlineWidthDp: Float = PhotoWallpaperOutlineWidthDp.DEFAULT,
     val homeAppIconMode: HomeAppIconMode = HomeAppIconMode.TEXT,
+    /** Arcticons toggle on and pack installed: app shortcuts on the rail show pack icons. */
+    val useArcticonsShortcutIcons: Boolean = false,
 )
 
 data class HomeNotificationIndicatorUiState(
@@ -1109,17 +1111,22 @@ class HomeViewModel @Inject constructor(
                 preferencesManager.useArcticonsDrawerIconsFlow,
                 arcticonsIconPackRepository.installedPackage,
             ) { mode, enabled, installed ->
-                if (!enabled || installed == null) HomeAppIconMode.TEXT else HomeAppIconMode.fromStored(mode)
+                val active = enabled && installed != null
+                (if (active) HomeAppIconMode.fromStored(mode) else HomeAppIconMode.TEXT) to active
             }
-        ) { mode ->
-            _uiState.value = _uiState.value.copy(homeAppIconMode = mode)
-            if (mode != HomeAppIconMode.TEXT) {
+        ) { (mode, active) ->
+            _uiState.value =
+                _uiState.value.copy(homeAppIconMode = mode, useArcticonsShortcutIcons = active)
+            if (active) {
                 viewModelScope.launch { arcticonsIconPackRepository.warmUp() }
             }
         }
     }
 
     suspend fun loadArcticonsIcon(app: AppInfo) = arcticonsIconPackRepository.getIcon(app)
+
+    suspend fun loadArcticonsShortcutIcon(app: AppInfo) =
+        arcticonsIconPackRepository.getIcon(app, allowPlaceholder = false)
 
     fun refreshArcticonsInstallState() = arcticonsIconPackRepository.refreshInstalledPackage()
 
